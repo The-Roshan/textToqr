@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background: #0e2a47;
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-10px);
+        }
+
+        h1 {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #e0f7fa;
+            margin-bottom: 1em;
+            letter-spacing: 1px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background-color: #e0f7fa;
+            color: #333;
+            font-size: 1em;
+            resize: vertical;
+            height: 100px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: 600;
+            color: #1e5676;
+            background: linear-gradient(145deg, #e0f7fa, #80deea);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background: linear-gradient(145deg, #80deea, #4dd0e1);
+            transform: scale(1.05);
+        }
+
+        #qrCode {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="backgroundCanvas"></canvas>
+    <div class="container">
+        <h1>QR Code Generator</h1>
+        <textarea id="text" maxlength="300" placeholder="Enter text (max 300 characters)"></textarea>
+        <button onclick="generateQRCode()">Generate QR Code</button>
+        <div id="qrCode"></div>
+    </div>
+
+    <!-- Include the QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        // Particle Background Animation with Canvas
+        const canvas = document.getElementById('backgroundCanvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+        const colors = ['#e0f7fa', '#80deea', '#4dd0e1', '#26c6da'];
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        class Particle {
+            constructor(x, y, size, color, weight) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.color = color;
+                this.weight = weight;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            update() {
+                this.y += this.weight;
+                if (this.y > canvas.height) {
+                    this.y = 0 - this.size;
+                    this.x = Math.random() * canvas.width * 1.3;
+                }
+                this.draw();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.width * canvas.height) / 5000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = Math.random() * 5 + 1;
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                let color = colors[Math.floor(Math.random() * colors.length)];
+                let weight = Math.random() * 0.5 + 0.5;
+                particlesArray.push(new Particle(x, y, size, color, weight));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let particle of particlesArray) {
+                particle.update();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        function generateQRCode() {
+            const qrCodeContainer = document.getElementById('qrCode');
+            qrCodeContainer.innerHTML = ''; // Clear previous QR code
+            const text = document.getElementById('text').value;
+
+            if (text.trim() === '') {
+                alert('Please enter some text');
+                return;
+            }
+            if (text.length > 300) {
+                alert('Text is too long. Please limit to 300 characters for better scan quality.');
+                return;
+            }
+
+            new QRCode(qrCodeContainer, {
+                text: text,
+                width: 150,
+                height: 150,
+                colorDark: "#ffffff",
+                colorLight: "#1e5676"
+            });
+        }
+    </script>
+</body>
+</html>
